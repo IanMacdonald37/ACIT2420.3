@@ -90,7 +90,7 @@ ssh -i <path-to-your-key> <user-name>@<debian machine ip>
 
 ## Prevent root user connection via SSH
 
-**Dont skip anything above before following these steps. **
+**Dont skip anything above before following these steps.**
 
 We don't want anyone to be able to SSH into the root user, especially now that you have your own user. 
 
@@ -116,6 +116,120 @@ You should not be able to make an SSH connection to the root user of this system
 Disconnect from the system and attempt to conect to the root user as you have in the past.
 You should be denied access. 
 
-## Install nginx
+## nginx
 
-## Configure nginx
+Let's start by installing the package. 
+
+```bash
+sudo apt install nginx
+```
+
+Next we need to open the new directory that nginx made in /var
+
+```bash
+cd /var/www
+```
+
+Now create a new directory called `my-site` and open a new html file. Don't forget `sudo`
+
+```bash
+sudo mkdir my-site
+```
+
+```bash
+sudo vim my-site/index.html
+```
+
+Copy the following contents into that file. 
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2420</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hello, World</h1>
+</body>
+</html>
+```
+
+Next, delete `/etc/nginx/sites-available/default`
+
+```bash
+cd /etc/nginx/sites-available/
+```
+
+```Bash
+sudo rm default
+```
+
+Now we need to put a new conf file in its place
+
+```Bash
+sudo vim my_site.conf
+```
+
+Place the following into it:
+
+```
+server {
+	listen 80 default_server;
+	listen [::]:80 default_server;
+	
+	root /var/www/my_site;
+	
+	index index.html index.htm index.nginx-debian.html;
+	
+	server_name _;
+	
+	location / {
+		# First attempt to serve request as file, then
+		# as directory, then fall back to displaying a 404.
+		try_files $uri $uri/ =404;
+	}
+}
+```
+
+Now remove the link in `/etc/nginx/sites-enabled`
+
+```bash
+sudo unlink /etc/nginx/sites-enabled/default
+```
+
+Make a new link to replace it
+
+```bash
+sudo ln -s /etc/nginx/sites-available/my_site.conf /etc/nginx/sites-enabled
+```
+
+Test your link
+
+```bash
+sudo nginx -t
+```
+
+If you are error free, refresh nginx
+
+```bash
+sudo systemctl restart nginx
+```
+
+Now we can see our new page when we run:
+
+```bash
+curl <your-ip-address>
+```
